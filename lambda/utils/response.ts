@@ -51,7 +51,5 @@ export function ResponseUtils_getHost(event: APIGatewayProxyEvent): string {
 }
 
 export function ResponseUtils_getReferer(event: APIGatewayProxyEvent): string {
-  return (
-    event.headers.origin || event.headers.Origin || event.headers.referer || event.headers.Referer || Config.host
-  );
+  return event.headers.origin || event.headers.Origin || event.headers.referer || event.headers.Referer || Config.host;
 }
