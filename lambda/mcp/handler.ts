@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Endpoint, RouteHandler } from "yatro";
 import { IDI } from "../utils/di";
-import { Utils_getEnv, Utils_isLocal } from "../utils";
+import { Config } from "../../src/config";
 import { UserDao } from "../dao/userDao";
 import { OauthDao } from "../dao/oauthDao";
 import { ApiKeyDao } from "../dao/apiKeyDao";
@@ -250,11 +250,7 @@ async function handleToolCall(
   const authHeader = event.headers.Authorization || event.headers.authorization;
   if (!authHeader?.startsWith("Bearer ")) {
     di.log.log(`[MCP] ${toolName} -> 401: no bearer token`);
-    const baseUrl = Utils_isLocal()
-      ? "https://local.liftosaur.com:8080"
-      : Utils_getEnv() === "dev"
-        ? "https://stage.liftosaur.com"
-        : "https://www.liftosaur.com";
+    const baseUrl = Config.host;
     return {
       statusCode: 401,
       body: JSON.stringify({ error: "unauthorized" }),
@@ -280,11 +276,7 @@ async function handleToolCall(
   }
   if (!userId) {
     di.log.log(`[MCP] ${toolName} -> 401: invalid/expired token`);
-    const baseUrl = Utils_isLocal()
-      ? "https://local.liftosaur.com:8080"
-      : Utils_getEnv() === "dev"
-        ? "https://stage.liftosaur.com"
-        : "https://www.liftosaur.com";
+    const baseUrl = Config.host;
     return {
       statusCode: 401,
       body: JSON.stringify({ error: "unauthorized" }),

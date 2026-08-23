@@ -3,7 +3,7 @@ import { Endpoint, RouteHandler } from "yatro";
 import { IDI } from "../utils/di";
 import { OauthDao } from "../dao/oauthDao";
 import { UserDao } from "../dao/userDao";
-import { Utils_getEnv, Utils_isLocal } from "../utils";
+import { Config } from "../../src/config";
 import * as Cookie from "cookie";
 
 interface IPayload {
@@ -28,11 +28,7 @@ function oauthError(status: number, error: string, description: string): APIGate
 }
 
 function getBaseUrl(): string {
-  if (Utils_isLocal()) {
-    return "https://local.liftosaur.com:8080";
-  }
-  const env = Utils_getEnv();
-  return env === "dev" ? "https://stage.liftosaur.com" : "https://www.liftosaur.com";
+  return Config.host;
 }
 
 async function getCurrentUserId(event: APIGatewayProxyEvent, di: IDI): Promise<string | undefined> {
