@@ -1,14 +1,9 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import * as Cookie from "cookie";
 import { UrlUtils_build } from "../../src/utils/url";
-import { localdomain } from "../../src/localdomain";
+import { Config } from "../../src/config";
 
-export const allowedHosts = [
-  `${localdomain}.liftosaur.com:8080`,
-  "www.liftosaur.com",
-  "localhost:8080",
-  "stage.liftosaur.com",
-];
+export const allowedHosts = [new URL(Config.host).host];
 
 export function ResponseUtils_json(
   status: number,
@@ -46,22 +41,17 @@ export function ResponseUtils_getHeaders(event: APIGatewayProxyEvent): Record<st
 export function ResponseUtils_clearSessionCookie(): string {
   return Cookie.serialize("session", "", {
     httpOnly: true,
-    domain: ".liftosaur.com",
     path: "/",
     expires: new Date(1970, 0, 1),
   });
 }
 
 export function ResponseUtils_getHost(event: APIGatewayProxyEvent): string {
-  return event.headers.Host || event.headers.host || "liftosaur.com";
+  return event.headers.Host || event.headers.host || new URL(Config.host).host;
 }
 
 export function ResponseUtils_getReferer(event: APIGatewayProxyEvent): string {
   return (
-    event.headers.origin ||
-    event.headers.Origin ||
-    event.headers.referer ||
-    event.headers.Referer ||
-    "https://www.liftosaur.com"
+    event.headers.origin || event.headers.Origin || event.headers.referer || event.headers.Referer || Config.host
   );
 }
