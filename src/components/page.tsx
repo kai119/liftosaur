@@ -218,7 +218,6 @@ export function Page<T>(props: IProps<T>): JSX.Element {
           <link key={c} rel="stylesheet" type="text/css" href={`/${c}.css?version=${commitHash}`} />
         ))}
         <meta charSet="UTF-8" />
-        <link rel="preconnect" href="https://api3.liftosaur.com" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="shortcut icon" type="image/x-icon" href="/icons/favicon.ico" />
         <link rel="canonical" href={props.canonical} />

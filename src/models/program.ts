@@ -108,6 +108,7 @@ import {
 import { CollectionUtils_sortBy, CollectionUtils_uniqBy } from "../utils/collection";
 import { IPlannerEvalResult, PlannerSyntaxError } from "../pages/planner/plannerExerciseEvaluator";
 import { UrlUtils_build } from "../utils/url";
+import { Config } from "../config";
 import { Service } from "../api/service";
 import { EditProgram_initPlannerState } from "./editProgram";
 import { ProgramSet_getEvaluatedWeight } from "./programSet";
@@ -1362,7 +1363,7 @@ export async function Program_toUrl(
   const exportedProgram = Program_exportProgram(program, settings);
   const baseUrl = UrlUtils_build(
     "/planner",
-    typeof window !== "undefined" && window.location?.href ? window.location.href : "https://www.liftosaur.com"
+    typeof window !== "undefined" && window.location?.href ? window.location.href : Config.host
   );
   const json = JSON.stringify(exportedProgram);
   const hash = StringUtils_hashString(json);

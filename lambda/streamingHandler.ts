@@ -14,6 +14,7 @@ import { ClaudeProvider } from "./utils/llms/claude";
 import { IAccount, Account_getFromStorage } from "../src/models/account";
 import { Subscriptions } from "./utils/subscriptions";
 import { UrlContentFetcher } from "./utils/urlContentFetcher";
+import { Config } from "../src/config";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const awslambda: any;
@@ -32,7 +33,7 @@ interface IPayload {
 
 function getHeaders(event: APIGatewayProxyEventV2): Record<string, string> {
   const origin = event.headers?.origin || event.headers?.Origin || "*";
-  const corsOrigin = allowedHosts.some((h) => origin.includes(h)) ? origin : "https://www.liftosaur.com";
+  const corsOrigin = allowedHosts.some((h) => origin.includes(h)) ? origin : Config.host;
 
   return {
     "Content-Type": "text/event-stream",

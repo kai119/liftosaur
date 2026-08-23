@@ -4,6 +4,7 @@ import { ActiveSheetHeightProvider } from "../navigation/ActiveSheetHeightContex
 import { reducerWrapper, defaultOnActions, IAction } from "../ducks/reducer";
 import { Dialog_alert } from "../utils/dialog";
 import { Program_getProgram } from "../models/program";
+import { Config } from "../config";
 import { useThunkReducer } from "../utils/useThunkReducer";
 import {
   Thunk_fetchStorage,
@@ -196,8 +197,7 @@ export function AppView(props: IProps): JSX.Element | null {
   };
 
   useEffect(() => {
-    const url =
-      typeof window !== "undefined" ? UrlUtils_build(window.location.href, "https://liftosaur.com") : undefined;
+    const url = typeof window !== "undefined" ? UrlUtils_build(window.location.href, Config.host) : undefined;
     const urlUserId = url != null ? url.searchParams.get("userid") || undefined : undefined;
     if (state.adminKey != null && urlUserId != null) {
       const storageId = url != null ? url.searchParams.get("storageid") || undefined : undefined;
