@@ -1,6 +1,7 @@
 import { JSX, ReactNode } from "react";
 import { Pressable, Linking } from "react-native";
 import { Text } from "./components/primitives/text";
+import { Config } from "./config";
 
 interface IProps {
   href: string;
@@ -10,7 +11,7 @@ interface IProps {
 }
 
 export function InternalLink(props: IProps): JSX.Element {
-  const url = props.href.startsWith("/") ? `https://www.liftosaur.com${props.href}` : props.href;
+  const url = props.href.startsWith("/") ? `${Config.host}${props.href}` : props.href;
   return (
     <Pressable
       onPress={() => {
