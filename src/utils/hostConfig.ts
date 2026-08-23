@@ -1,7 +1,8 @@
 import { Platform } from "react-native";
+import { Config } from "../config";
 
 function baseHost(): string {
-  return (globalThis as { __HOST__?: string }).__HOST__ ?? "https://www.liftosaur.com";
+  return (globalThis as { __HOST__?: string }).__HOST__ ?? Config.host;
 }
 
 export function HostConfig_imageHost(): string {
