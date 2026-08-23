@@ -135,6 +135,7 @@ const watchConfig = {
         process.env.NODE_ENV === "production" && process.env.STAGE ? "https://stage.liftosaur.com" : config.host
       ),
       __ENV__: JSON.stringify(process.env.NODE_ENV === "production" ? "production" : "development"),
+      __LFT_CONFIG__: JSON.stringify(config),
     }),
   ],
   mode: process.env.NODE_ENV === "production" ? "production" : "development",
@@ -265,6 +266,7 @@ const mainConfig = {
       __HOST__: JSON.stringify(
         process.env.NODE_ENV === "production" && process.env.STAGE ? "https://stage.liftosaur.com" : config.host
       ),
+      __LFT_CONFIG__: JSON.stringify(config),
     }),
     new CopyPlugin([
       {
@@ -746,6 +748,7 @@ const editorWebviewConfig = {
       ),
       __BUNDLE_VERSION_IOS__: bundleVersionIos,
       __BUNDLE_VERSION_ANDROID__: bundleVersionAndroid,
+      __LFT_CONFIG__: JSON.stringify(config),
     }),
     new HtmlWebpackPlugin({
       template: "./src/pages/planner/webviewEditor/editorWebview.html",

@@ -1,6 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const resolvedConfig = require("../config");
-
 export interface ILftStorageConfig {
   dynamoEndpoint: string;
   s3Endpoint: string;
@@ -19,4 +16,14 @@ export interface ILftConfig {
   flags: Record<string, never>;
 }
 
-export const Config: ILftConfig = resolvedConfig;
+declare const __LFT_CONFIG__: string | undefined;
+
+function resolveClientConfig(): ILftConfig {
+  if (typeof __LFT_CONFIG__ !== "undefined") {
+    return JSON.parse(__LFT_CONFIG__);
+  }
+
+  return require("../config");
+}
+
+export const Config: ILftConfig = resolveClientConfig();
