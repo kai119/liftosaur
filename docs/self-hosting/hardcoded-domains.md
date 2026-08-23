@@ -18,7 +18,7 @@ entry that needs to be added here with a reason.
   fields on every page component. These are SEO metadata for search engines and social
   previews; a self-hosted instance is LAN/Tailscale-only and never indexed, so stale
   values here are inert, not a bug.
-- `src/index.html:9` (`<link rel="canonical">`) and `:34` (`og:image`) — same SEO
+- `src/index.html:8` (`<link rel="canonical">`) and `:33` (`og:image`) — same SEO
   metadata category as the `*Html.tsx` pages, just in the static app-shell template
   instead of a server-rendered component.
 - `src/components/page.tsx:101` — JSON-LD `Organization` schema `url` field, same
@@ -79,6 +79,14 @@ entry that needs to be added here with a reason.
   (`source: "info@liftosaur.com"` SES "from" addresses) — SES is bypassed entirely by
   issue #5 (neutralise SES/CloudWatch/self-invoke); these values are inert once that
   lands and not worth touching twice.
+
+## Dev-mode templates (intentional, not a gap)
+
+- `src/App.native.tsx:31,32,34` — the `` `https://${localdomain}.liftosaur.com:${localport}` ``-style
+  templates for `nativeHost`/`nativeApiHost`/`nativeStreamingApiHost`, used only when `__DEV__` is
+  true. These mirror the same per-worktree `localdomain.js` dev pattern used throughout the rest of
+  the codebase (see `webpack.config.js`'s own dev-server cert/proxy logic above); not a self-hosting
+  gap.
 
 ## Non-routing identifiers (leave as-is)
 
