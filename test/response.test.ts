@@ -19,9 +19,13 @@ describe("response config wiring", () => {
     expect(allowedHosts).to.include(configuredHost);
   });
 
-  it("clears the session cookie without a domain attribute", () => {
+  it("clears the session cookie with a domain attribute in dev, without one in prod", () => {
     const serialized = ResponseUtils_clearSessionCookie();
-    expect(serialized.toLowerCase()).to.not.include("domain=");
+    if (Config.isDev) {
+      expect(serialized.toLowerCase()).to.include("domain=.liftosaur.com");
+    } else {
+      expect(serialized.toLowerCase()).to.not.include("domain=");
+    }
   });
 
   it("falls back to the configured host when the Host header is missing", () => {

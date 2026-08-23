@@ -41,6 +41,7 @@ export function ResponseUtils_getHeaders(event: APIGatewayProxyEvent): Record<st
 export function ResponseUtils_clearSessionCookie(): string {
   return Cookie.serialize("session", "", {
     httpOnly: true,
+    domain: Config.isDev ? ".liftosaur.com" : undefined,
     path: "/",
     expires: new Date(1970, 0, 1),
   });
