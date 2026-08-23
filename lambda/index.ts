@@ -37,6 +37,7 @@ import Rollbar from "rollbar";
 import { IDI } from "./utils/di";
 import { runMigrations } from "../src/migrations/runner";
 import { c, IEither } from "../src/utils/types";
+import { Config } from "../src/config";
 import {
   ResponseUtils_json,
   ResponseUtils_getHeaders,
@@ -1084,11 +1085,11 @@ async function createNewUser(
 
 function getWebUrl(event: APIGatewayProxyEvent): string {
   if (Utils_getEnv() === "prod") {
-    return "https://www.liftosaur.com";
+    return Config.host;
   }
   const referer = ResponseUtils_getReferer(event);
   const originResult = UrlUtils_buildSafe(referer);
-  return originResult.success ? originResult.data.origin : "https://local.liftosaur.com:8080";
+  return originResult.success ? originResult.data.origin : Config.host;
 }
 
 const noEmail = "noemail@example.com";
@@ -3371,7 +3372,7 @@ async function _getProgramShorturlResponseHandler(
 ): Promise<APIGatewayProxyResult> {
   const urlString = await new UrlDao(di).get(id);
   if (urlString) {
-    const url = UrlUtils_build(urlString, "https://www.liftosaur.com");
+    const url = UrlUtils_build(urlString, Config.host);
     const data = url.searchParams.get("data");
     const s = url.searchParams.get("s");
     const u = url.searchParams.get("u");
@@ -3454,7 +3455,7 @@ const getProgramShorturlHandler: RouteHandler<
   const isMobile = Mobile_isMobile(payload.event.headers["user-agent"] || payload.event.headers["User-Agent"] || "");
   const urlString = await new UrlDao(di).get(id);
   if (urlString) {
-    const url = UrlUtils_build(urlString, "https://www.liftosaur.com");
+    const url = UrlUtils_build(urlString, Config.host);
     const data = url.searchParams.get("data");
     const source = url.searchParams.get("s") || undefined;
     if (data) {
@@ -3530,7 +3531,7 @@ const postShortUrlHandler: RouteHandler<IPayload, APIGatewayProxyResult, typeof 
     return ResponseUtils_json(400, event, {});
   }
   if (userid || src) {
-    const uriResult = UrlUtils_buildSafe(url, "https://www.liftosaur.com");
+    const uriResult = UrlUtils_buildSafe(url, Config.host);
     if (uriResult.success) {
       const uri = uriResult.data;
       if (userid) {
