@@ -2,6 +2,7 @@ import { IProgram } from "../../src/types";
 import { IProgramDetail } from "../../src/api/service";
 import { IProgramIndexEntry, Program_create } from "../../src/models/program";
 import { IDI } from "../utils/di";
+import { Config } from "../../src/config";
 
 export interface IProgramPayload {
   program: IProgram;
@@ -43,7 +44,7 @@ export const programOrder = [
 ];
 
 function getCdnHost(): string {
-  return process.env.HOST || "https://www.liftosaur.com";
+  return process.env.HOST || Config.host;
 }
 
 function buildProgram(entry: IProgramIndexEntry, detail: IProgramDetail): IProgram {

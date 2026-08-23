@@ -9,6 +9,7 @@ import { Program_exerciseRangeFormat } from "../../src/models/program";
 import { StringUtils_pluralize } from "../../src/utils/string";
 import { IEither } from "../../src/utils/types";
 import { Tailwind_semanticConcrete } from "../../src/utils/tailwindConfig";
+import { Config } from "../../src/config";
 
 declare const __non_webpack_require__: NodeRequire;
 
@@ -131,7 +132,7 @@ export class ProgramImageGenerator {
     const exercisesRange = indexEntry.exercisesRange;
 
     const imageExercises = exercises.filter((e) => ExerciseImageUtils_exists(e, "small"));
-    const cdnHost = process.env.HOST || "https://www.liftosaur.com";
+    const cdnHost = process.env.HOST || Config.host;
     const maxImages = 12;
     const displayExercises = imageExercises.slice(0, maxImages);
 
