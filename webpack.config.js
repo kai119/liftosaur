@@ -35,7 +35,6 @@ const bundleVersionWatchIos = 1;
 const bundleVersionWatchAndroid = 1;
 
 const localapi = `https://${localapidomain}.liftosaur.com:${localapiport}/`;
-const local = `https://${localdomain}.liftosaur.com:${localport}/`;
 
 const isDev = process.env.NODE_ENV !== "production";
 
