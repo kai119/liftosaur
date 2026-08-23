@@ -4,19 +4,24 @@ import { resolveConfig } from "../config";
 
 describe("resolveConfig", () => {
   describe("dev mode", () => {
-    it("derives host/apiHost/streamingApiHost from localdomain.default when NODE_ENV is not production", () => {
-      const domains = require("../localdomain.default");
+    it("derives host/apiHost/streamingApiHost from whatever localdomain source resolves in dev mode", () => {
+      let domains;
+      try {
+        domains = require("../localdomain");
+      } catch (e) {
+        domains = require("../localdomain.default");
+      }
       const config = resolveConfig({});
       expect(config.isDev).to.equal(true);
-      expect(config.host).to.equal(`https://${domains.main}.liftosaur.com:${domains.port}`);
-      expect(config.apiHost).to.equal(`https://${domains.api}.liftosaur.com:${domains.apiPort}`);
+      expect(config.host).to.equal(`https://${domains.main}.liftosaur.com:${domains.port || 8080}`);
+      expect(config.apiHost).to.equal(`https://${domains.api}.liftosaur.com:${domains.apiPort || 3000}`);
       expect(config.streamingApiHost).to.equal(
-        `https://${domains.streamingapi}.liftosaur.com:${domains.streamingApiPort}`
+        `https://${domains.streamingapi}.liftosaur.com:${domains.streamingApiPort || 3001}`
       );
-      expect(config.port).to.equal(domains.port);
-      expect(config.apiPort).to.equal(domains.apiPort);
-      expect(config.streamingApiPort).to.equal(domains.streamingApiPort);
-      expect(config.metroPort).to.equal(domains.metroPort);
+      expect(config.port).to.equal(domains.port || 8080);
+      expect(config.apiPort).to.equal(domains.apiPort || 3000);
+      expect(config.streamingApiPort).to.equal(domains.streamingApiPort || 3001);
+      expect(config.metroPort).to.equal(domains.metroPort || 8081);
     });
 
     it("defaults storage endpoints to local emulator addresses", () => {
