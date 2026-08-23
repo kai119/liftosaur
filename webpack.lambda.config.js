@@ -1,5 +1,6 @@
 const path = require("path");
 const { DefinePlugin, NormalModuleReplacementPlugin, SourceMapDevToolPlugin } = require("webpack");
+const config = require("./config");
 
 let commitHash, fullCommitHash;
 try {
@@ -110,10 +111,10 @@ module.exports = {
       __COMMIT_HASH__: JSON.stringify(commitHash),
       __FULL_COMMIT_HASH__: JSON.stringify(fullCommitHash),
       __ENV__: JSON.stringify("production"),
-      __HOST__: JSON.stringify(isStage ? "https://stage.liftosaur.com" : "https://www.liftosaur.com"),
-      __API_HOST__: JSON.stringify(isStage ? "https://api3-dev.liftosaur.com" : "https://api3.liftosaur.com"),
+      __HOST__: JSON.stringify(isStage ? "https://stage.liftosaur.com" : config.host),
+      __API_HOST__: JSON.stringify(isStage ? "https://api3-dev.liftosaur.com" : config.apiHost),
       __STREAMING_API_HOST__: JSON.stringify(
-        isStage ? "https://streaming-api-dev.liftosaur.com" : "https://streaming-api.liftosaur.com"
+        isStage ? "https://streaming-api-dev.liftosaur.com" : config.streamingApiHost
       ),
     }),
   ],
