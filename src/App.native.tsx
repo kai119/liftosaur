@@ -16,6 +16,7 @@ import {
   localapiport,
   localstreamingapiport,
 } from "./localdomain";
+import { Config } from "./config";
 
 declare let Rollbar: RB;
 
@@ -27,13 +28,11 @@ declare let __HOST__: string;
 // Dev hosts come from localdomain.js so each git worktree's native build targets
 // its own dev/api/streaming ports (see scripts/worktree-create.sh).
 const useLocal = __DEV__;
-const nativeHost = useLocal ? `https://${localdomain}.liftosaur.com:${localport}` : "https://www.liftosaur.com";
-const nativeApiHost = useLocal
-  ? `https://${localapidomain}.liftosaur.com:${localapiport}`
-  : "https://api3.liftosaur.com";
+const nativeHost = useLocal ? `https://${localdomain}.liftosaur.com:${localport}` : Config.host;
+const nativeApiHost = useLocal ? `https://${localapidomain}.liftosaur.com:${localapiport}` : Config.apiHost;
 const nativeStreamingApiHost = useLocal
   ? `https://${localstreamingapidomain}.liftosaur.com:${localstreamingapiport}`
-  : "https://streaming-api.liftosaur.com";
+  : Config.streamingApiHost;
 
 const globalAny = globalThis as unknown as {
   __HOST__: string;
