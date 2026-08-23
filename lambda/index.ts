@@ -673,7 +673,6 @@ const postSyncHandler: RouteHandler<IPayload, APIGatewayProxyResult, typeof post
     const session = JWT.sign({ userId: userId }, cookieSecret);
     setCookie = Cookie.serialize("session", session, {
       httpOnly: true,
-      domain: ".liftosaur.com",
       path: "/",
       expires: new Date(new Date().getFullYear() + 10, 0, 1),
     });
@@ -910,7 +909,6 @@ const postDebugSessionHandler: RouteHandler<IPayload, APIGatewayProxyResult, typ
   const session = JWT.sign({ userId: debugId }, await di.secrets.getCookieSecret());
   const setCookie = Cookie.serialize("session", session, {
     httpOnly: true,
-    domain: ".liftosaur.com",
     path: "/",
     expires: new Date(new Date().getFullYear() + 10, 0, 1),
   });
@@ -1030,7 +1028,6 @@ async function signInResponse(
       ...ResponseUtils_getHeaders(event),
       "set-cookie": Cookie.serialize("session", session, {
         httpOnly: true,
-        domain: ".liftosaur.com",
         path: "/",
         expires: new Date(new Date().getFullYear() + 10, 0, 1),
       }),
