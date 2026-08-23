@@ -6,6 +6,7 @@ const {
   apiPort: localapiport = 3000,
   streamingApiPort: localstreamingapiport = 3001,
 } = require("./localdomain");
+const config = require("./config");
 
 const path = require("path");
 const fs = require("fs");
@@ -132,11 +133,7 @@ const watchConfig = {
       __COMMIT_HASH__: JSON.stringify(commitHash),
       __FULL_COMMIT_HASH__: JSON.stringify(fullCommitHash),
       __HOST__: JSON.stringify(
-        process.env.NODE_ENV === "production"
-          ? process.env.STAGE
-            ? "https://stage.liftosaur.com"
-            : "https://www.liftosaur.com"
-          : local
+        process.env.NODE_ENV === "production" && process.env.STAGE ? "https://stage.liftosaur.com" : config.host
       ),
       __ENV__: JSON.stringify(process.env.NODE_ENV === "production" ? "production" : "development"),
     }),
@@ -256,26 +253,18 @@ const mainConfig = {
       __COMMIT_HASH__: JSON.stringify(commitHash),
       __FULL_COMMIT_HASH__: JSON.stringify(fullCommitHash),
       __API_HOST__: JSON.stringify(
-        process.env.NODE_ENV === "production"
-          ? process.env.STAGE
-            ? "https://api3-dev.liftosaur.com"
-            : "https://api3.liftosaur.com"
-          : `https://${localapidomain}.liftosaur.com:${localapiport}`
+        process.env.NODE_ENV === "production" && process.env.STAGE
+          ? "https://api3-dev.liftosaur.com"
+          : config.apiHost
       ),
       __STREAMING_API_HOST__: JSON.stringify(
-        process.env.NODE_ENV === "production"
-          ? process.env.STAGE
-            ? "https://streaming-api-dev.liftosaur.com"
-            : "https://streaming-api.liftosaur.com"
-          : `https://${localstreamingapidomain}.liftosaur.com:${localstreamingapiport}`
+        process.env.NODE_ENV === "production" && process.env.STAGE
+          ? "https://streaming-api-dev.liftosaur.com"
+          : config.streamingApiHost
       ),
       __ENV__: JSON.stringify(process.env.NODE_ENV === "production" ? "production" : "development"),
       __HOST__: JSON.stringify(
-        process.env.NODE_ENV === "production"
-          ? process.env.STAGE
-            ? "https://stage.liftosaur.com"
-            : "https://www.liftosaur.com"
-          : `https://${localdomain}.liftosaur.com:${localport}`
+        process.env.NODE_ENV === "production" && process.env.STAGE ? "https://stage.liftosaur.com" : config.host
       ),
     }),
     new CopyPlugin([
@@ -744,25 +733,17 @@ const editorWebviewConfig = {
       __FULL_COMMIT_HASH__: JSON.stringify(fullCommitHash),
       __ENV__: JSON.stringify(process.env.NODE_ENV === "production" ? "production" : "development"),
       __HOST__: JSON.stringify(
-        process.env.NODE_ENV === "production"
-          ? process.env.STAGE
-            ? "https://stage.liftosaur.com"
-            : "https://www.liftosaur.com"
-          : local
+        process.env.NODE_ENV === "production" && process.env.STAGE ? "https://stage.liftosaur.com" : config.host
       ),
       __API_HOST__: JSON.stringify(
-        process.env.NODE_ENV === "production"
-          ? process.env.STAGE
-            ? "https://api3-dev.liftosaur.com"
-            : "https://api3.liftosaur.com"
-          : `https://${localapidomain}.liftosaur.com:${localapiport}`
+        process.env.NODE_ENV === "production" && process.env.STAGE
+          ? "https://api3-dev.liftosaur.com"
+          : config.apiHost
       ),
       __STREAMING_API_HOST__: JSON.stringify(
-        process.env.NODE_ENV === "production"
-          ? process.env.STAGE
-            ? "https://streaming-api-dev.liftosaur.com"
-            : "https://streaming-api.liftosaur.com"
-          : `https://${localstreamingapidomain}.liftosaur.com:${localstreamingapiport}`
+        process.env.NODE_ENV === "production" && process.env.STAGE
+          ? "https://streaming-api-dev.liftosaur.com"
+          : config.streamingApiHost
       ),
       __BUNDLE_VERSION_IOS__: bundleVersionIos,
       __BUNDLE_VERSION_ANDROID__: bundleVersionAndroid,
