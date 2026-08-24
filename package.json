@@ -75,6 +75,7 @@
     "dynamo:down": "docker compose down",
     "dynamo:logs": "docker compose logs -f dynamo",
     "dynamo:wait": "TS_NODE_TRANSPILE_ONLY=1 ts-node scripts/waitForDynamo.ts",
+    "dynamo:provision": "TS_NODE_TRANSPILE_ONLY=1 ts-node scripts/provisionDynamo.ts",
     "sitemap": "TS_NODE_TRANSPILE_ONLY=1 ts-node ./src/sitemap.ts",
     "testgen": "playwright codegen --test-id-attribute data-cy 'https://local.liftosaur.com:8080/app/?skipintro=1'",
     "knip": "knip",
