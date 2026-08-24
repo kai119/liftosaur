@@ -91,6 +91,13 @@ the preferred option (genuinely open source, production-grade); DynamoDB Local i
 fallback. Table and index definitions are ported out of `liftosaur-cdk/liftosaur-cdk.ts`
 into an idempotent provisioning script.
 
+Locally (and for this repo's own dev/test loop) the datastore runs via `docker-compose.yml` at the repo
+root (`npm run dynamo:up`), with `--developer-mode 1 --overprovisioned 1` since a general-purpose home
+server disk won't satisfy Scylla's production hardware checks (XFS, dedicated I/O scheduling). The same
+image is what the `home_server` Compose project (#16) runs in production. `npm run dynamo:provision` runs
+the idempotent table-creation script (`scripts/provisionDynamo.ts`); `npm run test:dynamo` exercises
+`DynamoUtil` against the real container.
+
 ### Object storage
 
 Five buckets are used at runtime: caches, debugs, exceptions, storages, stats, plus the

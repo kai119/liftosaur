@@ -1,0 +1,18 @@
+services:
+  dynamo:
+    image: scylladb/scylla:2026.2.5
+    container_name: liftosaur-dynamo
+    command: >
+      --smp 1
+      --memory 750M
+      --overprovisioned 1
+      --developer-mode 1
+      --alternator-port 8000
+      --alternator-write-isolation always
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - dynamo-data:/var/lib/scylla
+
+volumes:
+  dynamo-data:
