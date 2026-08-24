@@ -85,9 +85,7 @@ const baseTableDefinitions: IDynamoTableDefinition[] = [
     name: "lftLogs",
     partitionKey: { name: "userId", type: "S" },
     sortKey: { name: "action", type: "S" },
-    gsis: [
-      { name: "lftLogsDate", partitionKey: { name: "year", type: "N" }, sortKey: { name: "month", type: "N" } },
-    ],
+    gsis: [{ name: "lftLogsDate", partitionKey: { name: "year", type: "N" }, sortKey: { name: "month", type: "N" } }],
   },
   { name: "lftUserPrograms", partitionKey: { name: "userId", type: "S" }, sortKey: { name: "id", type: "S" } },
   { name: "lftPrograms", partitionKey: { name: "id", type: "S" } },

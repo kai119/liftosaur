@@ -6,10 +6,12 @@ import {
   waitUntilTableExists,
 } from "@aws-sdk/client-dynamodb";
 import { DynamoUtil_clientConfig } from "../lambda/utils/dynamo";
-import { DynamoTableDefinitions_all, IDynamoTableDefinition } from "./dynamoTableDefinitions";
+import { DynamoTableDefinitions_all, IDynamoAttributeType, IDynamoTableDefinition } from "./dynamoTableDefinitions";
 
-function collectAttributeDefinitions(table: IDynamoTableDefinition): { AttributeName: string; AttributeType: string }[] {
-  const attrs = new Map<string, string>();
+function collectAttributeDefinitions(
+  table: IDynamoTableDefinition
+): { AttributeName: string; AttributeType: IDynamoAttributeType }[] {
+  const attrs = new Map<string, IDynamoAttributeType>();
   attrs.set(table.partitionKey.name, table.partitionKey.type);
   if (table.sortKey) {
     attrs.set(table.sortKey.name, table.sortKey.type);
@@ -53,7 +55,7 @@ async function createTable(client: DynamoDBClient, table: IDynamoTableDefinition
   }
 }
 
-async function enableTtl(client: DynamoDBClient, table: IDynamoTableDefinition): Promise<void> {
+async function enableTtl(client: DynamoDBClient, table: IDynamoTableDefinition, justCreated: boolean): Promise<void> {
   if (!table.ttlAttribute) {
     return;
   }
@@ -65,6 +67,9 @@ async function enableTtl(client: DynamoDBClient, table: IDynamoTableDefinition):
       })
     );
   } catch (e) {
+    if (justCreated) {
+      throw e;
+    }
     console.log(`  TTL on ${table.name}: ${e instanceof Error ? e.message : String(e)} (likely already enabled)`);
   }
 }
@@ -77,7 +82,7 @@ async function provisionTable(client: DynamoDBClient, table: IDynamoTableDefinit
   } else {
     console.log(`${table.name} already exists, skipping`);
   }
-  await enableTtl(client, table);
+  await enableTtl(client, table, created);
 }
 
 async function provisionAll(): Promise<void> {

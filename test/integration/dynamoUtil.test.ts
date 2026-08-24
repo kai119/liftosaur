@@ -5,6 +5,8 @@ import {
   DeleteTableCommand,
   DynamoDBClient,
   ListTablesCommand,
+  waitUntilTableExists,
+  waitUntilTableNotExists,
 } from "@aws-sdk/client-dynamodb";
 import { DynamoUtil, DynamoUtil_clientConfig } from "../../lambda/utils/dynamo";
 import { MockLogUtil } from "../utils/mockLogUtil";
@@ -42,6 +44,7 @@ describe("DynamoUtil (integration, real local datastore)", function () {
 
     try {
       await client.send(new DeleteTableCommand({ TableName: TEST_TABLE }));
+      await waitUntilTableNotExists({ client, maxWaitTime: 30 }, { TableName: TEST_TABLE });
     } catch (e) {
       // table didn't exist yet - fine
     }
@@ -68,6 +71,7 @@ describe("DynamoUtil (integration, real local datastore)", function () {
         ],
       })
     );
+    await waitUntilTableExists({ client, maxWaitTime: 30 }, { TableName: TEST_TABLE });
   });
 
   after(async function () {
