@@ -1,4 +1,4 @@
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, DynamoDBClientConfig } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
   QueryCommand,
@@ -16,6 +16,7 @@ import {
   NativeAttributeValue,
 } from "@aws-sdk/lib-dynamodb";
 import { CollectionUtils_inGroupsOf, CollectionUtils_compact } from "../../src/utils/collection";
+import { Config } from "../../src/config";
 import { ILogUtil } from "./log";
 
 export interface IDynamoUtil {
@@ -74,6 +75,14 @@ export interface IDynamoUtil {
   batchPut(args: { tableName: string; items: Record<string, NativeAttributeValue>[] }): Promise<void>;
 }
 
+export function DynamoUtil_clientConfig(): DynamoDBClientConfig {
+  return {
+    endpoint: Config.storage.dynamoEndpoint,
+    region: "local",
+    credentials: { accessKeyId: "local", secretAccessKey: "local" },
+  };
+}
+
 export class DynamoUtil implements IDynamoUtil {
   private _dynamo?: DynamoDBDocumentClient;
 
@@ -81,7 +90,7 @@ export class DynamoUtil implements IDynamoUtil {
 
   private get dynamo(): DynamoDBDocumentClient {
     if (this._dynamo == null) {
-      this._dynamo = DynamoDBDocumentClient.from(new DynamoDBClient({}), {
+      this._dynamo = DynamoDBDocumentClient.from(new DynamoDBClient(DynamoUtil_clientConfig()), {
         marshallOptions: { removeUndefinedValues: true },
       });
     }
