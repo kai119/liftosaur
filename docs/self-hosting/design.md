@@ -66,8 +66,8 @@ Phone / browser (LAN or Tailscale)
                             +-------------------------------+-------------------+
                             v                               v                   v
                    DynamoDB-compatible store         Object storage        Local secrets
-                   (ScyllaDB Alternator or           (MinIO or             (.env / JSON,
-                    DynamoDB Local)                   filesystem)           generated on
+                   (ScyllaDB Alternator or           (SeaweedFS)           (.env / JSON,
+                    DynamoDB Local)                                        generated on
                                                                             first run)
 ```
 
@@ -100,11 +100,46 @@ the idempotent table-creation script (`scripts/provisionDynamo.ts`); `npm run te
 
 ### Object storage
 
-Five buckets are used at runtime: caches, debugs, exceptions, storages, stats, plus the
-read-only images buckets. `IS3Util` requires presigned upload and download URLs, which
-`/api/imageuploadurl` depends on. A naive filesystem adapter cannot produce those without
-inventing a signing scheme, so MinIO is the default choice; the filesystem adapter remains
-an option if the presigned-URL paths are reworked.
+Nine buckets are provisioned at runtime: caches, debugs, exceptions, storages, stats,
+programs, assets, userimages, and static. The tenth bucket in `LftS3Buckets`, `images`, is
+deliberately excluded — it's a CloudFront-only, unsuffixed bucket shared publicly for
+exercise images and never written through `IS3Util` at runtime in this codebase; mirroring
+it locally is a separate, not-yet-implemented issue (see "Assets"). `IS3Util` requires
+presigned upload and download URLs, which `/api/imageuploadurl` depends on. A naive
+filesystem adapter cannot produce those without inventing a signing scheme, so we run an
+S3-compatible server locally instead.
+
+MinIO was the obvious first choice but isn't a good one any more: its OSS project went into
+maintenance mode in late 2025 — official Docker images were pulled from Docker Hub and Quay
+that October, and bucket/console management moved behind a paid tier. We use SeaweedFS
+instead: Apache-2.0, still actively maintained by its original author rather than a rescue
+fork, and it speaks the same S3 API, including SigV4 presigned URLs.
+
+Locally (and for this repo's own dev/test loop) object storage runs via `docker-compose.yml`'s
+`s3` service (`npm run s3:up`), with `npm run s3:wait` to block until it's ready. `npm run
+s3:provision` runs the idempotent bucket-creation script (`scripts/provisionS3.ts`), which,
+like `scripts/provisionDynamo.ts` for tables, provisions both the dev- and prod-suffixed
+bucket names unconditionally so the same shared local container serves both `IS_DEV=true`
+and `IS_DEV=false` runs. `npm run test:s3` exercises `S3Util` against the real container.
+
+Lifecycle rules equivalent to the old CDK TTLs (caches 1 day, debugs 365, exceptions 30,
+storages 14) are applied via `PutBucketLifecycleConfiguration`. SeaweedFS has known bugs in
+its lifecycle day-count accuracy (upstream issues seaweedfs/seaweedfs#6619 and #6682), and
+this branch doesn't verify that the applied rule round-trips correctly or that expiration is
+actually enforced — treat these as best-effort housekeeping, not a guarantee, until that's
+checked against the real container.
+
+One deployment detail for #16 (the `home_server` Compose project that wires up Caddy) to be
+aware of: `S3Util_clientConfig()` points at a single endpoint, `Config.storage.s3Endpoint`,
+and that same endpoint gets baked into the presigned upload URLs `/api/imageuploadurl` hands
+back to phones and browsers, which then PUT directly to it (see `src/utils/imageUploader.ts`
+and `imageUploader.native.ts`). Because SigV4 signs the `Host` header, a reverse proxy can't
+rewrite the host after the URL is signed — so `S3_ENDPOINT` has to be an address reachable
+from an end-user's device, such as hairpinned back through Caddy at the public origin, not
+just reachable from the app server's own container. This is the write-side counterpart to
+the `/userimages/*` route already called out in the topology diagram above for reads: both
+need Caddy to expose the bucket contents at the public origin, one for GETs served out of
+object storage, the other for the PUT target embedded in a signed URL.
 
 ### Secrets
 

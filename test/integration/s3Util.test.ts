@@ -121,7 +121,11 @@ describe("S3Util (integration, real local object storage)", function () {
   });
 
   it("getPresignedDownloadUrl produces a URL that actually serves a GET, and honours expiresIn", async () => {
-    await s3Util.putObject({ bucket: TEST_BUCKET, key: "presigned-download.txt", body: "downloaded via presigned url" });
+    await s3Util.putObject({
+      bucket: TEST_BUCKET,
+      key: "presigned-download.txt",
+      body: "downloaded via presigned url",
+    });
 
     const downloadUrl = await s3Util.getPresignedDownloadUrl({
       bucket: TEST_BUCKET,
