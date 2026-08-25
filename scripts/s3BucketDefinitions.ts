@@ -1,5 +1,4 @@
 import { LftS3Buckets } from "../lambda/dao/buckets";
-import { Utils_getEnv } from "../lambda/utils";
 
 export interface IS3BucketDefinition {
   name: string;
@@ -18,10 +17,13 @@ const baseBucketDefinitions: { key: Exclude<keyof typeof LftS3Buckets, "images">
   { key: "static" },
 ];
 
-export function S3BucketDefinitions_all(): IS3BucketDefinition[] {
-  const suffix = Utils_getEnv() === "dev" ? "dev" : "";
+export function S3BucketDefinitions_forSuffix(suffix: "" | "dev"): IS3BucketDefinition[] {
   return baseBucketDefinitions.map((b) => ({
     name: `${LftS3Buckets[b.key]}${suffix}`,
     lifecycleDays: b.lifecycleDays,
   }));
+}
+
+export function S3BucketDefinitions_all(): IS3BucketDefinition[] {
+  return [...S3BucketDefinitions_forSuffix(""), ...S3BucketDefinitions_forSuffix("dev")];
 }
