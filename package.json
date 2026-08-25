@@ -78,6 +78,7 @@
     "s3:down": "docker compose down",
     "s3:logs": "docker compose logs -f s3",
     "dynamo:wait": "TS_NODE_TRANSPILE_ONLY=1 ts-node scripts/waitForDynamo.ts",
+    "s3:wait": "TS_NODE_TRANSPILE_ONLY=1 ts-node scripts/waitForS3.ts",
     "dynamo:provision": "TS_NODE_TRANSPILE_ONLY=1 ts-node scripts/provisionDynamo.ts",
     "test:dynamo": "npm run dynamo:up && npm run dynamo:wait && npm run dynamo:provision && mocha -r ts-node/register --timeout 0 test/integration/dynamoUtil.test.ts",
     "sitemap": "TS_NODE_TRANSPILE_ONLY=1 ts-node ./src/sitemap.ts",
