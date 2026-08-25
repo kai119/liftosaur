@@ -1,5 +1,6 @@
 import {
   S3Client,
+  S3ClientConfig,
   ListObjectsCommand,
   ListObjectsCommandOutput,
   GetObjectCommand,
@@ -9,6 +10,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Readable } from "stream";
+import { Config } from "../../src/config";
 import { ILogUtil } from "./log";
 
 export interface IS3Util {
@@ -33,6 +35,15 @@ export interface IS3Util {
   getPresignedDownloadUrl(args: { bucket: string; key: string; expiresIn?: number }): Promise<string>;
 }
 
+export function S3Util_clientConfig(): S3ClientConfig {
+  return {
+    endpoint: Config.storage.s3Endpoint,
+    region: "us-east-1",
+    forcePathStyle: true,
+    credentials: { accessKeyId: "local", secretAccessKey: "locallocal" },
+  };
+}
+
 export class S3Util implements IS3Util {
   private _s3?: S3Client;
 
@@ -40,7 +51,7 @@ export class S3Util implements IS3Util {
 
   private get s3(): S3Client {
     if (this._s3 == null) {
-      this._s3 = new S3Client({});
+      this._s3 = new S3Client(S3Util_clientConfig());
     }
     return this._s3;
   }
