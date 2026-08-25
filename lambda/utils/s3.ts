@@ -40,6 +40,7 @@ export function S3Util_clientConfig(): S3ClientConfig {
     endpoint: Config.storage.s3Endpoint,
     region: "us-east-1",
     forcePathStyle: true,
+    requestChecksumCalculation: "WHEN_REQUIRED",
     credentials: { accessKeyId: "local", secretAccessKey: "locallocal" },
   };
 }

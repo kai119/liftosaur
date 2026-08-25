@@ -9,6 +9,7 @@ describe("S3Util_clientConfig", () => {
     expect(clientConfig.endpoint).to.equal(Config.storage.s3Endpoint);
     expect(clientConfig.region).to.equal("us-east-1");
     expect(clientConfig.forcePathStyle).to.equal(true);
+    expect(clientConfig.requestChecksumCalculation).to.equal("WHEN_REQUIRED");
     expect(clientConfig.credentials).to.deep.equal({ accessKeyId: "local", secretAccessKey: "locallocal" });
   });
 
