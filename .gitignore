@@ -15,6 +15,7 @@
 /pricepointscache
 .playwright-mcp
 localdomain.js
+/secrets.json
 /output
 /programdata
 
