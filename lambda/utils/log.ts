@@ -66,7 +66,7 @@ export class LogUtil implements ILogUtil {
     try {
       fs.mkdirSync(this.logDirPath, { recursive: true });
       const fileName = `${DateUtils_formatYYYYMMDD(new Date(), "-")}.log`;
-      const line = `${timeStr} [${this.id}]${this.userid ? `[${this.userid}]` : ""} ${message}\n`;
+      const line = `${timeStr} [${this.id}]${this.userid ? `[${this.userid}]` : ""} ${message.replace(/\n/g, "\\n")}\n`;
       fs.appendFileSync(path.join(this.logDirPath, fileName), line);
     } catch (e) {
       // Best-effort: a full disk, missing permissions, or a read-only fs

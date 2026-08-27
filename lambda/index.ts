@@ -1038,11 +1038,13 @@ async function signInResponse(
 }
 
 // Linking by email is only safe when the email is verified: OAuth ids imply
-// IdP-verified emails; password-only accounts must have clicked a link we sent
-// (emailVerifiedAt), otherwise pre-registering someone's email + password would
-// capture their future OAuth sign-ins.
+// IdP-verified emails. emailVerifiedAt does NOT: this fork auto-verifies every
+// email/password signup at creation time (no click-a-link proof exists), so
+// treating it as ownership proof here would let anyone pre-register a
+// victim's email + a known password and capture the victim's later OAuth
+// sign-in onto that attacker-controlled account.
 function pickEmailLinkTarget(di: IDI, candidates: ILimitedUserDao[]): ILimitedUserDao | undefined {
-  const eligible = candidates.filter((u) => u.googleId != null || u.appleId != null || u.emailVerifiedAt != null);
+  const eligible = candidates.filter((u) => u.googleId != null || u.appleId != null);
   if (eligible.length === 0) {
     return undefined;
   }

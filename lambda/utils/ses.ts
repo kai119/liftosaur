@@ -12,12 +12,7 @@ export interface ISesUtil {
 export class SesUtil implements ISesUtil {
   constructor(public readonly log: ILogUtil) {}
 
-  public async sendEmail(args: {
-    destination: string;
-    source: string;
-    subject: string;
-    body: string;
-  }): Promise<void> {
+  public async sendEmail(args: { destination: string; source: string; subject: string; body: string }): Promise<void> {
     this.log.log(`Email (not sent, no MTA configured) to '${args.destination}': ${args.subject}\n${args.body}`);
   }
 }

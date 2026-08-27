@@ -453,7 +453,7 @@ export function EmailAuthForm(props: IEmailAuthFormProps): JSX.Element {
       setError(emailAuthErrorMessages[result.error] || "Something went wrong, please try again");
     } else if (result.confirmationSent) {
       setInfo(
-        "This email already has a Liftosaur account. We've emailed you a link to set a password for it - check your email."
+        "This email already has an account that signs in with Google or Apple. Ask your server admin to run `npm run admin:resetpassword` to set a password for it."
       );
     }
   }

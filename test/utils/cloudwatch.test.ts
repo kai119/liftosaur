@@ -4,6 +4,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { CloudwatchUtil } from "../../lambda/utils/cloudwatch";
+import { LogUtil } from "../../lambda/utils/log";
 import { MockLogUtil } from "./mockLogUtil";
 import { DateUtils_formatYYYYMMDD } from "../../src/utils/date";
 
@@ -62,6 +63,22 @@ describe("CloudwatchUtil (local file-backed)", () => {
     const content = fs.readFileSync(path.join(outDir, outputFile), "utf8");
     expect(content).to.include("userA");
     expect(content).to.not.include("userB");
+  });
+
+  it("still groups a real LogUtil-written multi-line message under its own request id", async () => {
+    const logDir = tempLogDir();
+    const realDate = new Date();
+    const realDayStr = DateUtils_formatYYYYMMDD(realDate, "-");
+    const writer = new LogUtil(logDir);
+    writer.setUser("userA");
+    writer.log("stack trace:\nat foo.js:1\nat bar.js:2");
+
+    const cw = new CloudwatchUtil(new MockLogUtil(), logDir);
+    await cw.getLogs(realDate);
+
+    const outputFile = `logs-${realDayStr}.txt`;
+    const content = fs.readFileSync(path.join(outDir, outputFile), "utf8");
+    expect(content).to.include(`[${writer.id}][userA] stack trace:\\nat foo.js:1\\nat bar.js:2`);
   });
 
   it("logs and returns without writing an output file when the day's log file doesn't exist", async () => {
