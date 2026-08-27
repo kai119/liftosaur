@@ -245,14 +245,6 @@ export function Thunk_emailAuth(
   };
 }
 
-export function Thunk_forgotPassword(email: string, cb: (result: IEmailAuthResult) => void): IThunk {
-  return async (dispatch, getState, env) => {
-    dispatch(Thunk_postevent("email-forgot-password"));
-    const result = await load(dispatch, "Sending email", () => env.service.forgotPassword(email));
-    cb(result);
-  };
-}
-
 export function Thunk_postevent(action: string, extra?: Record<string, string | number>): IThunk {
   return async (dispatch, getState, env) => {
     lg(action, extra, env.service, getState().user?.id || getState().storage.tempUserId);

@@ -151,7 +151,6 @@ const mainConfig = {
   entry: {
     main: ["./src/main.tsx", "./src/index.css"],
     login: ["./src/login.tsx", "./src/index.css"],
-    resetpassword: ["./src/resetPassword.tsx", "./src/index.css"],
     verifyemail: ["./src/verifyEmail.tsx", "./src/index.css"],
     exercise: ["./src/exercise.tsx", "./src/index.css"],
     repmax: ["./src/repmax.tsx", "./src/index.css"],
@@ -549,10 +548,6 @@ const mainConfig = {
         secure: false,
       },
       "/verifyemail": {
-        target: localapi,
-        secure: false,
-      },
-      "/resetpassword": {
         target: localapi,
         secure: false,
       },

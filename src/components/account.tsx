@@ -15,7 +15,7 @@ import { IconGoogle } from "./icons/iconGoogle";
 import { IconSpinner } from "./icons/iconSpinner";
 import { IDispatch } from "../ducks/types";
 import { IState } from "../models/state";
-import { Thunk_googleSignIn, Thunk_appleSignIn, Thunk_emailAuth, Thunk_forgotPassword } from "../ducks/thunks";
+import { Thunk_googleSignIn, Thunk_appleSignIn, Thunk_emailAuth } from "../ducks/thunks";
 import { IEmailAuthResult } from "../ducks/thunks";
 import { track } from "../utils/posthog";
 import { Tailwind_semantic } from "../utils/tailwindConfig";
@@ -406,7 +406,7 @@ export function EmailAuthButton(props: { onPress: () => void }): JSX.Element {
   );
 }
 
-export type IEmailAuthMode = "signin" | "signup" | "forgot";
+export type IEmailAuthMode = "signin" | "signup";
 
 const emailAuthErrorMessages: Record<string, string> = {
   invalid_email: "Please enter a valid email address",
@@ -417,7 +417,6 @@ const emailAuthErrorMessages: Record<string, string> = {
   account_not_found: "No account exists with this email",
   wrong_password: "Wrong password",
   too_many_attempts: "Too many attempts, try again in 15 minutes",
-  email_send_failed: "Couldn't send the confirmation email, please try again later",
   network_error: "Network error, please try again",
 };
 
@@ -464,27 +463,6 @@ export function EmailAuthForm(props: IEmailAuthFormProps): JSX.Element {
     const password = passwordRef.current;
     setError(undefined);
     setInfo(undefined);
-    if (mode === "forgot") {
-      if (!email) {
-        setError(emailAuthErrorMessages.invalid_email);
-        return;
-      }
-      setIsSubmitting(true);
-      const onSent = (result: IEmailAuthResult): void => {
-        if (result.error) {
-          handleResult(result);
-        } else {
-          setIsSubmitting(false);
-          setInfo(`We've sent an email with instructions to ${email}.`);
-        }
-      };
-      if (props.dispatch) {
-        props.dispatch(Thunk_forgotPassword(email, onSent));
-      } else if (props.service) {
-        onSent(await props.service.forgotPassword(email));
-      }
-      return;
-    }
     if (mode === "signup") {
       track({ name: "SignUp" });
     }
@@ -541,23 +519,21 @@ export function EmailAuthForm(props: IEmailAuthFormProps): JSX.Element {
           }
         }}
       />
-      {mode !== "forgot" && (
-        <View className="mt-2">
-          <Input
-            label="Password"
-            identifier="email-auth-password"
-            type="password"
-            changeType="oninput"
-            autoCapitalize="none"
-            autoCorrect={false}
-            changeHandler={(r) => {
-              if (r.success) {
-                passwordRef.current = r.data;
-              }
-            }}
-          />
-        </View>
-      )}
+      <View className="mt-2">
+        <Input
+          label="Password"
+          identifier="email-auth-password"
+          type="password"
+          changeType="oninput"
+          autoCapitalize="none"
+          autoCorrect={false}
+          changeHandler={(r) => {
+            if (r.success) {
+              passwordRef.current = r.data;
+            }
+          }}
+        />
+      </View>
       {error && <Text className="mt-2 text-xs text-text-error">{error}</Text>}
       {info && <Text className="mt-2 text-xs text-text-secondary">{info}</Text>}
       <View className="items-center mt-3">
@@ -574,10 +550,8 @@ export function EmailAuthForm(props: IEmailAuthFormProps): JSX.Element {
             <IconSpinner width={20} height={20} color={Tailwind_semantic().text.alwayswhite} />
           ) : mode === "signin" ? (
             "Sign In"
-          ) : mode === "signup" ? (
-            "Create Account"
           ) : (
-            "Send Reset Link"
+            "Create Account"
           )}
         </Button>
       </View>
@@ -590,11 +564,6 @@ export function EmailAuthForm(props: IEmailAuthFormProps): JSX.Element {
         {mode !== "signup" && (
           <LinkButton name="email-auth-mode-signup" className="text-sm" onPress={() => switchMode("signup")}>
             Create account
-          </LinkButton>
-        )}
-        {mode !== "forgot" && (
-          <LinkButton name="email-auth-mode-forgot" className="text-sm" onPress={() => switchMode("forgot")}>
-            Forgot password?
           </LinkButton>
         )}
       </View>

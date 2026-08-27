@@ -346,42 +346,6 @@ export class Service {
     };
   }
 
-  public async forgotPassword(email: string): Promise<{ error?: string; providers?: string[] }> {
-    try {
-      const response = await this.client(`${__API_HOST__}/api/auth/forgotpassword`, {
-        method: "POST",
-        body: JSON.stringify({ email }),
-        credentials: "include",
-        headers: Service_nativeClientHeaders(),
-      });
-      if (response.ok) {
-        return {};
-      }
-      const json = await response.json().catch(() => ({}));
-      return { error: json.error || "unknown_error", providers: json.providers };
-    } catch (e) {
-      return { error: "network_error" };
-    }
-  }
-
-  public async resetPassword(token: string, password: string): Promise<{ error?: string }> {
-    try {
-      const response = await this.client(`${__API_HOST__}/api/auth/resetpassword`, {
-        method: "POST",
-        body: JSON.stringify({ token, password }),
-        credentials: "include",
-        headers: Service_nativeClientHeaders(),
-      });
-      if (response.ok) {
-        return {};
-      }
-      const json = await response.json().catch(() => ({}));
-      return { error: json.error || "unknown_error" };
-    } catch (e) {
-      return { error: "network_error" };
-    }
-  }
-
   public async verifyEmail(token: string): Promise<{ error?: string }> {
     try {
       const response = await this.client(`${__API_HOST__}/api/auth/verifyemail`, {

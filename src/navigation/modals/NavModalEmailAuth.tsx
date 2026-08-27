@@ -13,7 +13,6 @@ import type { IRootStackParamList } from "../types";
 const modalTitles: Record<IEmailAuthMode, string> = {
   signin: "Sign in with Email",
   signup: "Create Account",
-  forgot: "Forgot Password",
 };
 
 export function NavModalEmailAuth(): JSX.Element {

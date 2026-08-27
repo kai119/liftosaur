@@ -6,7 +6,6 @@ import { GoogleAuthTokenDao } from "./dao/googleAuthTokenDao";
 import { UserDao, ILimitedUserDao, IUserDao } from "./dao/userDao";
 import { EmailAuthTokenDao } from "./dao/emailAuthTokenDao";
 import { PasswordHash_hash, PasswordHash_verify } from "./utils/passwordHash";
-import { renderResetPasswordHtml } from "./resetPassword";
 import { renderVerifyEmailHtml } from "./verifyEmail";
 import { ApiKeyDao } from "./dao/apiKeyDao";
 import * as Cookie from "cookie";
@@ -41,7 +40,6 @@ import { Config } from "../src/config";
 import {
   ResponseUtils_json,
   ResponseUtils_getHeaders,
-  ResponseUtils_getReferer,
   ResponseUtils_getHost,
   ResponseUtils_clearSessionCookie,
 } from "./utils/response";
@@ -1086,15 +1084,6 @@ async function createNewUser(
   return user;
 }
 
-function getWebUrl(event: APIGatewayProxyEvent): string {
-  if (Utils_getEnv() === "prod") {
-    return Config.host;
-  }
-  const referer = ResponseUtils_getReferer(event);
-  const originResult = UrlUtils_buildSafe(referer);
-  return originResult.success ? originResult.data.origin : Config.host;
-}
-
 const noEmail = "noemail@example.com";
 
 const appleLoginEndpoint = Endpoint.build("/api/signin/apple");
@@ -1364,90 +1353,6 @@ const verifyEmailHandler: RouteHandler<IPayload, APIGatewayProxyResult, typeof v
   return ResponseUtils_json(200, payload.event, { status: "verified" });
 };
 
-const forgotPasswordEndpoint = Endpoint.build("/api/auth/forgotpassword");
-const forgotPasswordHandler: RouteHandler<IPayload, APIGatewayProxyResult, typeof forgotPasswordEndpoint> = async ({
-  payload,
-}) => {
-  const { event, di } = payload;
-  const env = Utils_getEnv();
-  const email = normalizeEmail(getBodyJson(event).email);
-  if (!emailRegex.test(email)) {
-    return ResponseUtils_json(400, event, { error: "invalid_email" });
-  }
-  const emailAuthTokenDao = new EmailAuthTokenDao(di);
-  // Silently pretend to send while rate-limited so the limiter can't be used to
-  // spam an inbox with reset emails
-  if (await emailAuthTokenDao.bumpAttemptsAndCheckLimit(env, `forgot:${email}`)) {
-    return ResponseUtils_json(200, event, { status: "ok" });
-  }
-  const userDao = new UserDao(di);
-  const candidates = await userDao.getAllByEmail(email);
-  const match = candidates.find((u) => u.passwordHash != null);
-  if (match == null) {
-    const providers = Array.from(
-      new Set(candidates.flatMap((u) => [...(u.googleId ? ["Google"] : []), ...(u.appleId ? ["Apple"] : [])]))
-    );
-    if (providers.length > 0) {
-      return ResponseUtils_json(403, event, { error: "use_oauth", providers });
-    }
-    return ResponseUtils_json(403, event, { error: "account_not_found" });
-  }
-  const token = await emailAuthTokenDao.create(env, { type: "reset", userId: match.id }, 60 * 60);
-  try {
-    await di.ses.sendEmail({
-      destination: email,
-      source: "info@liftosaur.com",
-      subject: "Liftosaur - reset your password",
-      body:
-        `You (or someone else) requested a password reset for the Liftosaur account ${email}.\n\n` +
-        `To set a new password, open this link:\n\n` +
-        `${getWebUrl(event)}/resetpassword?token=${token}\n\n` +
-        `The link expires in 1 hour. If that wasn't you, just ignore this email - your password won't change.`,
-    });
-  } catch (e) {
-    di.log.log("Failed to send forgot-password email", e instanceof Error ? e.message : e);
-    return ResponseUtils_json(502, event, { error: "email_send_failed" });
-  }
-  return ResponseUtils_json(200, event, { status: "ok" });
-};
-
-const resetPasswordEndpoint = Endpoint.build("/api/auth/resetpassword");
-const resetPasswordHandler: RouteHandler<IPayload, APIGatewayProxyResult, typeof resetPasswordEndpoint> = async ({
-  payload,
-}) => {
-  const { event, di } = payload;
-  const env = Utils_getEnv();
-  const bodyJson = getBodyJson(event);
-  const { token, password } = bodyJson;
-  if (typeof password !== "string" || password.length < minPasswordLength) {
-    return ResponseUtils_json(400, event, { error: "invalid_password" });
-  }
-  if (password.length > maxPasswordLength) {
-    return ResponseUtils_json(400, event, { error: "password_too_long" });
-  }
-  if (typeof token !== "string" || !token) {
-    return ResponseUtils_json(400, event, { error: "invalid_token" });
-  }
-  const tokenPayload = await new EmailAuthTokenDao(di).consume(env, token, ["reset"]);
-  if (tokenPayload == null || tokenPayload.type !== "reset") {
-    return ResponseUtils_json(400, event, { error: "invalid_token" });
-  }
-  const userDao = new UserDao(di);
-  const user = await userDao.getById(tokenPayload.userId, { historyLimit: 20 });
-  if (user == null) {
-    return ResponseUtils_json(400, event, { error: "invalid_token" });
-  }
-  user.passwordHash = await PasswordHash_hash(password);
-  // completing an emailed link proves inbox ownership just like the verify flow
-  user.emailVerifiedAt = user.emailVerifiedAt || Date.now();
-  await userDao.store(user);
-  await new EmailAuthTokenDao(di).clearAttempts(env, user.email);
-  // Deliberately no session: reset happens on a web page reached from an email
-  // link, so a web session wouldn't sign the (native-first) user into the app
-  // anyway and only confuses. They sign in fresh with the new password.
-  return ResponseUtils_json(200, event, { status: "ok" });
-};
-
 const changePasswordEndpoint = Endpoint.build("/api/auth/changepassword");
 const changePasswordHandler: RouteHandler<IPayload, APIGatewayProxyResult, typeof changePasswordEndpoint> = async ({
   payload,
@@ -1490,20 +1395,6 @@ const getVerifyEmailPageHandler: RouteHandler<
   return {
     statusCode: 200,
     body: renderVerifyEmailHtml(di.fetch, params.token),
-    headers: { "content-type": "text/html" },
-  };
-};
-
-const getResetPasswordPageEndpoint = Endpoint.build("/resetpassword", { token: "string?" });
-const getResetPasswordPageHandler: RouteHandler<
-  IPayload,
-  APIGatewayProxyResult,
-  typeof getResetPasswordPageEndpoint
-> = async ({ payload, match: { params } }) => {
-  const { di } = payload;
-  return {
-    statusCode: 200,
-    body: renderResetPasswordHtml(di.fetch, params.token),
     headers: { "content-type": "text/html" },
   };
 };
@@ -3851,11 +3742,8 @@ export const getRawHandler = (diBuilder: () => IDI): IHandler => {
       .post(emailSignupEndpoint, emailSignupHandler)
       .post(emailSigninEndpoint, emailSigninHandler)
       .post(verifyEmailEndpoint, verifyEmailHandler)
-      .post(forgotPasswordEndpoint, forgotPasswordHandler)
-      .post(resetPasswordEndpoint, resetPasswordHandler)
       .post(changePasswordEndpoint, changePasswordHandler)
       .get(getVerifyEmailPageEndpoint, getVerifyEmailPageHandler)
-      .get(getResetPasswordPageEndpoint, getResetPasswordPageHandler)
       .post(appleCallbackMobileEndpoint, appleCallbackMobileHandler)
       .post(signoutEndpoint, signoutHandler)
       .get(getProgramsEndpoint, getProgramsHandler)
