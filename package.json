@@ -82,6 +82,7 @@
     "dynamo:provision": "TS_NODE_TRANSPILE_ONLY=1 ts-node scripts/provisionDynamo.ts",
     "s3:provision": "TS_NODE_TRANSPILE_ONLY=1 ts-node scripts/provisionS3.ts",
     "admin:getlogs": "TS_NODE_TRANSPILE_ONLY=1 ts-node scripts/adminGetLogs.ts",
+    "admin:resetpassword": "TS_NODE_TRANSPILE_ONLY=1 ts-node scripts/adminResetPassword.ts",
     "test:dynamo": "npm run dynamo:up && npm run dynamo:wait && npm run dynamo:provision && mocha -r ts-node/register --timeout 0 test/integration/dynamoUtil.test.ts",
     "test:s3": "npm run s3:up && npm run s3:wait && npm run s3:provision && mocha -r ts-node/register --timeout 0 test/integration/s3Util.test.ts",
     "sitemap": "TS_NODE_TRANSPILE_ONLY=1 ts-node ./src/sitemap.ts",

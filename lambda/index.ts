@@ -1071,7 +1071,7 @@ async function createNewUser(
   di: IDI,
   clientId: unknown,
   email: string,
-  opts: { appleId?: string; googleId?: string; passwordHash?: string }
+  opts: { appleId?: string; googleId?: string; passwordHash?: string; emailVerifiedAt?: number }
 ): Promise<IUserDao> {
   const suggestedId =
     typeof clientId === "string" && /^[a-zA-Z0-9_-]{4,40}$/.test(clientId) ? clientId : UidFactory_generateUid(10);
@@ -1273,7 +1273,6 @@ const emailSignupHandler: RouteHandler<IPayload, APIGatewayProxyResult, typeof e
   payload,
 }) => {
   const { event, di } = payload;
-  const env = Utils_getEnv();
   const bodyJson = getBodyJson(event);
   const { password, id } = bodyJson;
   const email = normalizeEmail(bodyJson.email);
@@ -1287,55 +1286,28 @@ const emailSignupHandler: RouteHandler<IPayload, APIGatewayProxyResult, typeof e
     return ResponseUtils_json(400, event, { error: "password_too_long" });
   }
   const userDao = new UserDao(di);
-  const emailAuthTokenDao = new EmailAuthTokenDao(di);
   const candidates = await userDao.getAllByEmail(email);
   if (candidates.some((u) => u.passwordHash != null)) {
     return ResponseUtils_json(400, event, { error: "account_exists" });
   }
-  const webUrl = getWebUrl(event);
   const linkTarget = pickEmailLinkTarget(di, candidates);
   if (linkTarget) {
-    // Existing OAuth account. Never store the requester's password (an attacker
-    // could submit a victim's email + a known password). Instead email the owner
-    // a link that lets THEM choose a password on the reset page - proving both
-    // inbox ownership and password ownership. Rate-limit so it can't be used to
-    // spam/phish the inbox, and return the same response regardless.
-    if (!(await emailAuthTokenDao.bumpAttemptsAndCheckLimit(env, `sendmail:${email}`))) {
-      const token = await emailAuthTokenDao.create(env, { type: "reset", userId: linkTarget.id }, 60 * 60);
-      try {
-        await di.ses.sendEmail({
-          destination: email,
-          source: "info@liftosaur.com",
-          subject: "Liftosaur - set a password for your account",
-          body:
-            `You (or someone else) tried to add an email/password login to the Liftosaur account for ${email}.\n\n` +
-            `This account currently signs in with Google or Apple. If you'd like to add a password, choose one here:\n\n` +
-            `${webUrl}/resetpassword?token=${token}\n\n` +
-            `The link expires in 1 hour. If that wasn't you, just ignore this email - nothing will change and no password is set.`,
-        });
-      } catch (e) {
-        di.log.log("Failed to send set-password email", e instanceof Error ? e.message : e);
-      }
-    }
+    // Existing OAuth account, no password yet. There's no email flow to prove
+    // ownership in the self-hosted fork, so this can't set the password
+    // directly here (same reasoning as before: never store an unauthenticated
+    // requester's password on someone else's account). The account holder,
+    // who already has server access, runs `npm run admin:resetpassword` to
+    // set it themselves. The response is unchanged so any client still shows
+    // its existing "check your email" messaging.
+    di.log.log(`Signup: ${email} already has an OAuth-linked account without a password - use admin:resetpassword`);
     return ResponseUtils_json(200, event, { status: "confirmation_sent" });
   }
   const passwordHash = await PasswordHash_hash(password);
-  const user = await createNewUser(userDao, di, id, email, { passwordHash });
-  try {
-    const token = await emailAuthTokenDao.create(env, { type: "verify", userId: user.id }, 7 * 24 * 60 * 60);
-    await di.ses.sendEmail({
-      destination: email,
-      source: "info@liftosaur.com",
-      subject: "Liftosaur - verify your email",
-      body:
-        `Welcome to Liftosaur!\n\n` +
-        `Please verify your email by opening this link:\n\n` +
-        `${webUrl}/verifyemail?token=${token}\n\n` +
-        `Verifying makes sure you can reset your password later if you forget it.`,
-    });
-  } catch (e) {
-    di.log.log("Failed to send verification email", e instanceof Error ? e.message : e);
-  }
+  // No email step in the self-hosted fork: the account is verified at
+  // creation time instead of via a clicked link (see Task 4 note in
+  // docs/superpowers/plans/2026-08-26-issue-5-neutralise-ses-cloudwatch-lambda.md
+  // for why this is safe for a single-user deployment).
+  const user = await createNewUser(userDao, di, id, email, { passwordHash, emailVerifiedAt: Date.now() });
   return signInResponse(di, event, user, true);
 };
 
@@ -1383,28 +1355,13 @@ const emailSigninHandler: RouteHandler<IPayload, APIGatewayProxyResult, typeof e
 };
 
 const verifyEmailEndpoint = Endpoint.build("/api/auth/verifyemail");
+// No-op: accounts are auto-verified at signup (see emailSignupHandler), so
+// there's nothing left to verify. Kept as a 200 rather than removed so any
+// stale emailed/bookmarked link still resolves cleanly instead of 404ing.
 const verifyEmailHandler: RouteHandler<IPayload, APIGatewayProxyResult, typeof verifyEmailEndpoint> = async ({
   payload,
 }) => {
-  const { event, di } = payload;
-  const env = Utils_getEnv();
-  const bodyJson = getBodyJson(event);
-  const { token } = bodyJson;
-  if (typeof token !== "string" || !token) {
-    return ResponseUtils_json(400, event, { error: "invalid_token" });
-  }
-  const tokenPayload = await new EmailAuthTokenDao(di).consume(env, token, ["verify"]);
-  if (tokenPayload == null) {
-    return ResponseUtils_json(400, event, { error: "invalid_token" });
-  }
-  const userDao = new UserDao(di);
-  const user = await userDao.getLimitedById(tokenPayload.userId);
-  if (user == null) {
-    return ResponseUtils_json(400, event, { error: "invalid_token" });
-  }
-  user.emailVerifiedAt = Date.now();
-  await userDao.store(user);
-  return ResponseUtils_json(200, event, { status: "verified" });
+  return ResponseUtils_json(200, payload.event, { status: "verified" });
 };
 
 const forgotPasswordEndpoint = Endpoint.build("/api/auth/forgotpassword");
