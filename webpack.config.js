@@ -401,6 +401,15 @@ const mainConfig = {
           next();
         },
       });
+      middlewares.unshift({
+        name: "app-rewrite",
+        middleware: (req, res, next) => {
+          if (/^\/app\/?($|\?)/.test(req.url)) {
+            req.url = req.url.replace(/^\/app\/?/, "/app/index.html");
+          }
+          next();
+        },
+      });
       return middlewares;
     },
     headers: {
